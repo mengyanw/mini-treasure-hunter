@@ -1,0 +1,97 @@
+import { Container, Sprite } from "pixi.js";
+import { IScene, Manager } from "../Manager";
+
+export class GameScene extends Container implements IScene {
+    private door: Sprite;
+    private dungeon: Sprite;
+    private explorer: Sprite;
+    private blobs: Sprite[];
+    private treasure: Sprite;
+
+    private explorerVelocity: number;
+    private blobVelocity: number[];
+
+    constructor() {
+        super();
+
+        this.dungeon = Sprite.from("dungeon");
+        this.addChild(this.dungeon)
+
+        this.explorer = Sprite.from("explorer");
+        this.explorer.x = 68;
+	    this.explorer.y = Manager.height/2 - this.explorer.height / 2; 
+        this.addChild(this.explorer)
+
+        this.treasure = Sprite.from("treasure")
+        this.treasure.x = Manager.width - this.treasure.width - 48;
+        this.treasure.y = Manager.height / 2 - this.treasure.height / 2;
+        this.addChild(this.treasure);
+
+        this.door = Sprite.from("door")
+        this.door.position.set(32, 0);
+        this.addChild(this.door);
+
+        //Make the blobs
+        let numberOfBlobs = 6,
+            spacing = 48,
+            xOffset = 150,
+            speed = 2,
+            direction = 1;
+
+        //An array to store all the blob monsters
+        this.blobs = [];
+        this.blobVelocity = [];
+
+        //Make as many blobs as there are `numberOfBlobs`
+        for (let i = 0; i < numberOfBlobs; i++) {
+
+            //Make a blob
+            const blob = Sprite.from("blob");
+
+            //Space each blob horizontally according to the `spacing` value.
+            //`xOffset` determines the point from the left of the screen
+            //at which the first blob should be added
+            const x = spacing * i + xOffset;
+
+            //Give the blob a random y position
+            const y = Math.floor(Math.random() * (Manager.height - blob.height + 1));
+
+            //Set the blob's position
+            blob.x = x;
+            blob.y = y;
+
+            //Set the blob's vertical velocity. `direction` will be either `1` or
+            //`-1`. `1` means the enemy will move down and `-1` means the blob will
+            //move up. Multiplying `direction` by `speed` determines the blob's
+            //vertical direction
+            this.blobVelocity.push(speed * direction);
+
+            //Reverse the direction for the next blob
+            direction *= -1;
+
+            //Push the blob into the `blobs` array
+            this.blobs.push(blob);
+
+            //Add the blob to the `gameScene`
+            this.addChild(blob);
+        }
+
+        this.explorerVelocity = 0;
+        
+        
+    }
+    public update(framesPassed: number): void {
+        for (let i = 0; i < this.blobs.length; i++) {
+            this.blobs[i].y += this.blobVelocity[i]
+            if (this.blobs[i].y > Manager.height) {
+                this.blobs[i].y = Manager.height;
+                this.blobVelocity[i] = -this.blobVelocity[i];
+            }
+
+            if (this.blobs[i].y < 0) {
+                this.blobs[i].y = 0;
+                this.blobVelocity[i] = -this.blobVelocity[i];
+            }
+            }
+    }
+}
