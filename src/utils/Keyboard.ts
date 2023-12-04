@@ -1,7 +1,8 @@
-class Keyboard {
-    public static readonly state: Map<string, boolean>;
+export class Keyboard {
+    public static state: Map<string, boolean>;
     public static initialize() {
         // The `.bind(this)` here isn't necesary as these functions won't use `this`!
+        this.state = new Map()
         document.addEventListener("keydown", Keyboard.keyDown);
         document.addEventListener("keyup", Keyboard.keyUp);
     }

@@ -1,5 +1,6 @@
 import { Container, Sprite } from "pixi.js";
 import { IScene, Manager } from "../Manager";
+import { Keyboard } from "../utils/Keyboard";
 
 export class GameScene extends Container implements IScene {
     private door: Sprite;
@@ -8,7 +9,8 @@ export class GameScene extends Container implements IScene {
     private blobs: Sprite[];
     private treasure: Sprite;
 
-    private explorerVelocity: number;
+    private explorerVelocityX: number;
+    private explorerVelocityY: number;
     private blobVelocity: number[];
 
     constructor() {
@@ -76,9 +78,11 @@ export class GameScene extends Container implements IScene {
             this.addChild(blob);
         }
 
-        this.explorerVelocity = 0;
-        
-        
+        this.explorerVelocityX = 0;
+        this.explorerVelocityY = 0;
+
+        new Keyboard();
+        Keyboard.initialize();
     }
     public update(framesPassed: number): void {
         for (let i = 0; i < this.blobs.length; i++) {
@@ -93,5 +97,40 @@ export class GameScene extends Container implements IScene {
                 this.blobVelocity[i] = -this.blobVelocity[i];
             }
             }
+
+        this.explorer.x += this.explorerVelocityX
+        this.explorer.y += this.explorerVelocityY
+        if (this.explorer.x > Manager.width - this.explorer.width) {
+            this.explorer.x = Manager.width - this.explorer.width;
+        }
+        if (this.explorer.y > Manager.height - this.explorer.height) {
+            this.explorer.y = Manager.height - this.explorer.height;
+        }
+        if (this.explorer.x < 0) {
+            this.explorer.x = 0;
+        }
+        if (this.explorer.y < 0) {
+            this.explorer.y = 0;
+        }
+
+        if (Keyboard.state.get('ArrowRight')) {
+            this.explorerVelocityX = 5
+        }
+        else if (Keyboard.state.get('ArrowLeft')) {
+            this.explorerVelocityX = -5
+        }
+        else {
+            this.explorerVelocityX = 0
+        }
+        if (Keyboard.state.get('ArrowUp')) {
+            this.explorerVelocityY = -5
+        }
+        else if (Keyboard.state.get('ArrowDown')) {
+            this.explorerVelocityY = 5
+        }
+        else {
+            this.explorerVelocityY = 0
+        }
+
     }
 }
