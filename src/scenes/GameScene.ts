@@ -1,4 +1,4 @@
-import { Container, Sprite } from "pixi.js";
+import { Container, Sprite, DisplayObject } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { Keyboard } from "../utils/Keyboard";
 
@@ -85,10 +85,11 @@ export class GameScene extends Container implements IScene {
         Keyboard.initialize();
     }
     public update(framesPassed: number): void {
+        // animate blob
         for (let i = 0; i < this.blobs.length; i++) {
             this.blobs[i].y += this.blobVelocity[i]
-            if (this.blobs[i].y > Manager.height) {
-                this.blobs[i].y = Manager.height;
+            if (this.blobs[i].y > Manager.height - this.blobs[i].height) {
+                this.blobs[i].y = Manager.height - this.blobs[i].height;
                 this.blobVelocity[i] = -this.blobVelocity[i];
             }
 
@@ -98,6 +99,7 @@ export class GameScene extends Container implements IScene {
             }
             }
 
+        // control explorer with keyboard
         this.explorer.x += this.explorerVelocityX
         this.explorer.y += this.explorerVelocityY
         if (this.explorer.x > Manager.width - this.explorer.width) {
@@ -132,5 +134,30 @@ export class GameScene extends Container implements IScene {
             this.explorerVelocityY = 0
         }
 
+        this.explorer.alpha = 1
+        // check blob and player collision
+        this.blobs.forEach(blob => {
+            if (this.checkCollision(this.explorer, blob)) {
+                this.explorer.alpha = 0.5;
+            }
+        })
+
     }
+
+    private checkCollision(objA: DisplayObject, objB: DisplayObject): boolean {
+    const a = objA.getBounds();
+    const b = objB.getBounds();
+
+    const rightmostLeft = a.left < b.left ? b.left : a.left;
+    const leftmostRight = a.right > b.right ? b.right : a.right;
+
+    if (leftmostRight <= rightmostLeft) {
+        return false;
+    }
+
+    const bottommostTop = a.top < b.top ? b.top : a.top;
+    const topmostBottom = a.bottom > b.bottom ? b.bottom : a.bottom;
+
+    return topmostBottom > bottommostTop;
+}
 }
