@@ -1,6 +1,9 @@
 {
   "license": "",
+  "homepage": "https://mengyanw.github.io/mini-treasure-hunter",
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "webpack serve --mode=development",
     "build": "run-s clean build-only",
     "build-only": "webpack --mode=production",
@@ -11,6 +14,7 @@
   },
   "devDependencies": {
     "copy-webpack-plugin": "^11.0.0",
+    "gh-pages": "^6.1.0",
     "html-webpack-plugin": "^5.5.3",
     "npm-run-all": "^4.1.5",
     "rimraf": "^5.0.1",
