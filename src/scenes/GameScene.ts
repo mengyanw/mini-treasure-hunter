@@ -1,150 +1,79 @@
 import { Container, Sprite, DisplayObject } from "pixi.js";
 import { IScene, Manager } from "../Manager";
 import { Keyboard } from "../utils/Keyboard";
+import { HealthBar } from "../entity/HealthBar";
+import { Explorer } from "../entity/Explorer";
+import { Blobs } from "../entity/Blobs";
+import { EndScene } from "./EndScene";
 
 export class GameScene extends Container implements IScene {
-    private door: Sprite;
-    private dungeon: Sprite;
-    private explorer: Sprite;
-    private blobs: Sprite[];
-    private treasure: Sprite;
+  private door: Sprite;
+  private dungeon: Sprite;
+  private treasure: Sprite;
 
-    private explorerVelocityX: number;
-    private explorerVelocityY: number;
-    private blobVelocity: number[];
+  private explorer: Explorer;
+  private blobs: Blobs;
+  private healthBar: HealthBar;
 
-    constructor() {
-        super();
+  constructor() {
+    super();
 
-        this.dungeon = Sprite.from("dungeon");
-        this.addChild(this.dungeon)
+    this.dungeon = Sprite.from("dungeon");
+    this.addChild(this.dungeon);
 
-        this.explorer = Sprite.from("explorer");
-        this.explorer.x = 68;
-	    this.explorer.y = Manager.height/2 - this.explorer.height / 2; 
-        this.addChild(this.explorer)
+    this.treasure = Sprite.from("treasure");
+    this.treasure.x = Manager.width - this.treasure.width - 48;
+    this.treasure.y = Manager.height / 2 - this.treasure.height / 2;
+    this.addChild(this.treasure);
 
-        this.treasure = Sprite.from("treasure")
-        this.treasure.x = Manager.width - this.treasure.width - 48;
-        this.treasure.y = Manager.height / 2 - this.treasure.height / 2;
-        this.addChild(this.treasure);
+    this.door = Sprite.from("door");
+    this.door.position.set(32, 0);
+    this.addChild(this.door);
 
-        this.door = Sprite.from("door")
-        this.door.position.set(32, 0);
-        this.addChild(this.door);
+    this.explorer = new Explorer();
+    this.addChild(this.explorer);
 
-        //Make the blobs
-        let numberOfBlobs = 6,
-            spacing = 48,
-            xOffset = 150,
-            speed = 2,
-            direction = 1;
+    this.blobs = new Blobs();
+    this.addChild(this.blobs);
 
-        //An array to store all the blob monsters
-        this.blobs = [];
-        this.blobVelocity = [];
+    this.healthBar = new HealthBar();
+    this.addChild(this.healthBar);
 
-        //Make as many blobs as there are `numberOfBlobs`
-        for (let i = 0; i < numberOfBlobs; i++) {
+    new Keyboard();
+    Keyboard.initialize();
+  }
 
-            //Make a blob
-            const blob = Sprite.from("blob");
+  public update(framesPassed: number): void {
+    this.blobs.update();
 
-            //Space each blob horizontally according to the `spacing` value.
-            //`xOffset` determines the point from the left of the screen
-            //at which the first blob should be added
-            const x = spacing * i + xOffset;
+    this.explorer.update();
 
-            //Give the blob a random y position
-            const y = Math.floor(Math.random() * (Manager.height - blob.height + 1));
+    this.explorer.alpha = 1;
+    this.blobs.sprites.forEach((blob) => {
+      if (this.checkCollision(this.explorer.sprite, blob)) {
+        this.explorer.alpha = 0.5;
+        blob.alpha = 0.5;
+        this.healthBar.removePoint();
+      } else {
+        blob.alpha = 1;
+      }
+    });
 
-            //Set the blob's position
-            blob.x = x;
-            blob.y = y;
-
-            //Set the blob's vertical velocity. `direction` will be either `1` or
-            //`-1`. `1` means the enemy will move down and `-1` means the blob will
-            //move up. Multiplying `direction` by `speed` determines the blob's
-            //vertical direction
-            this.blobVelocity.push(speed * direction);
-
-            //Reverse the direction for the next blob
-            direction *= -1;
-
-            //Push the blob into the `blobs` array
-            this.blobs.push(blob);
-
-            //Add the blob to the `gameScene`
-            this.addChild(blob);
-        }
-
-        this.explorerVelocityX = 0;
-        this.explorerVelocityY = 0;
-
-        new Keyboard();
-        Keyboard.initialize();
-    }
-    public update(framesPassed: number): void {
-        // animate blob
-        for (let i = 0; i < this.blobs.length; i++) {
-            this.blobs[i].y += this.blobVelocity[i]
-            if (this.blobs[i].y > Manager.height - this.blobs[i].height) {
-                this.blobs[i].y = Manager.height - this.blobs[i].height;
-                this.blobVelocity[i] = -this.blobVelocity[i];
-            }
-
-            if (this.blobs[i].y < 0) {
-                this.blobs[i].y = 0;
-                this.blobVelocity[i] = -this.blobVelocity[i];
-            }
-            }
-
-        // control explorer with keyboard
-        this.explorer.x += this.explorerVelocityX
-        this.explorer.y += this.explorerVelocityY
-        if (this.explorer.x > Manager.width - this.explorer.width) {
-            this.explorer.x = Manager.width - this.explorer.width;
-        }
-        if (this.explorer.y > Manager.height - this.explorer.height) {
-            this.explorer.y = Manager.height - this.explorer.height;
-        }
-        if (this.explorer.x < 0) {
-            this.explorer.x = 0;
-        }
-        if (this.explorer.y < 0) {
-            this.explorer.y = 0;
-        }
-
-        if (Keyboard.state.get('ArrowRight')) {
-            this.explorerVelocityX = 5
-        }
-        else if (Keyboard.state.get('ArrowLeft')) {
-            this.explorerVelocityX = -5
-        }
-        else {
-            this.explorerVelocityX = 0
-        }
-        if (Keyboard.state.get('ArrowUp')) {
-            this.explorerVelocityY = -5
-        }
-        else if (Keyboard.state.get('ArrowDown')) {
-            this.explorerVelocityY = 5
-        }
-        else {
-            this.explorerVelocityY = 0
-        }
-
-        this.explorer.alpha = 1
-        // check blob and player collision
-        this.blobs.forEach(blob => {
-            if (this.checkCollision(this.explorer, blob)) {
-                this.explorer.alpha = 0.5;
-            }
-        })
-
+    if (this.checkCollision(this.explorer, this.treasure)) {
+      this.treasure.x = this.explorer.sprite.x + 8;
+      this.treasure.y = this.explorer.sprite.y + 8;
     }
 
-    private checkCollision(objA: DisplayObject, objB: DisplayObject): boolean {
+    if (this.checkCollision(this.treasure, this.door)) {
+      Manager.changeScene(new EndScene("You won!"));
+    }
+
+    if (this.healthBar.points == 0) {
+      Manager.changeScene(new EndScene("You lost!"));
+    }
+  }
+
+  private checkCollision(objA: DisplayObject, objB: DisplayObject): boolean {
     const a = objA.getBounds();
     const b = objB.getBounds();
 
@@ -152,12 +81,12 @@ export class GameScene extends Container implements IScene {
     const leftmostRight = a.right > b.right ? b.right : a.right;
 
     if (leftmostRight <= rightmostLeft) {
-        return false;
+      return false;
     }
 
     const bottommostTop = a.top < b.top ? b.top : a.top;
     const topmostBottom = a.bottom > b.bottom ? b.bottom : a.bottom;
 
     return topmostBottom > bottommostTop;
-}
+  }
 }

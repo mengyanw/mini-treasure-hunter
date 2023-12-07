@@ -1,5 +1,5 @@
-import { Manager } from './Manager';
-import { LoaderScene } from './scenes/LoaderScene';
+import { Manager } from "./Manager";
+import { LoaderScene } from "./scenes/LoaderScene";
 
 Manager.initialize(512, 512, 0x061639);
 
